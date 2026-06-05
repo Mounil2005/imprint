@@ -149,8 +149,8 @@ async function crawlPage(
 // itself, so it gets traced and deployed with the function.
 
 async function launchBrowser() {
-  const isServerless = process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT;
-  if (isServerless) {
+  if (process.env.VERCEL) {
+    // Vercel is serverless — no browser installation possible, use bundled binary
     const { default: chromium } = await import('@sparticuz/chromium');
     const { chromium: pw } = await import('playwright-core');
     return pw.launch({
@@ -159,6 +159,7 @@ async function launchBrowser() {
       headless: true,
     });
   }
+  // Railway / local: full container, browsers installed via playwright install
   const { chromium } = await import('playwright');
   return chromium.launch({
     headless: true,
