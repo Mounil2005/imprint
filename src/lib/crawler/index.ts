@@ -131,10 +131,9 @@ async function crawlPage(
   let screenshot: string | null = null;
   try {
     const buf = await page.screenshot({
-      fullPage: true,
       type: 'jpeg',
-      quality: 70,
-      clip: { x: 0, y: 0, width: 1440, height: 4000 },
+      quality: 60,
+      clip: { x: 0, y: 0, width: 1280, height: 1800 },
     });
     screenshot = `data:image/jpeg;base64,${buf.toString('base64')}`;
   } catch { /* continue without screenshot */ }
@@ -163,7 +162,16 @@ async function launchBrowser() {
   const { chromium } = await import('playwright');
   return chromium.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-zygote',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--single-process',
+    ],
   });
 }
 
