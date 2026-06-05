@@ -58,9 +58,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <p>
               Imprint measures <em>design pattern frequency</em> — not AI authorship.
             </p>
-            <p style={{ fontFamily: 'var(--font-mono)' }}>
-              Next.js · Playwright · Cheerio
-            </p>
+            <div className="flex items-center gap-4" style={{ fontFamily: 'var(--font-mono)' }}>
+              <Link href="/privacy" className="hover:text-[var(--text)] transition-colors">
+                Privacy Policy
+              </Link>
+              <span>© 2026 Imprint</span>
+            </div>
           </div>
         </footer>
       </body>
