@@ -149,7 +149,8 @@ async function crawlPage(
 // itself, so it gets traced and deployed with the function.
 
 async function launchBrowser() {
-  if (process.env.VERCEL) {
+  const isServerless = process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT;
+  if (isServerless) {
     const { default: chromium } = await import('@sparticuz/chromium');
     const { chromium: pw } = await import('playwright-core');
     return pw.launch({
