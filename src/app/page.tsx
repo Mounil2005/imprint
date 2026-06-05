@@ -17,7 +17,6 @@ type PageState =
   | { status: 'success-combined'; websiteResult: AnalysisResult; codeResult: CodeAnalysisResult; combinedScore: number; interpretation: string }
   | { status: 'error'; message: string };
 
-const EXAMPLE_URLS = ['linear.app', 'vercel.com', 'stripe.com', 'framer.com'];
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
@@ -159,7 +158,7 @@ export default function HomePage() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="stripe.com"
+              placeholder="yoursite.com"
               aria-label="Website URL to analyze"
               className="flex-1 bg-[var(--surface)] border border-[var(--border-mid)] px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--muted)] focus:outline-none transition-colors"
               style={{ fontFamily: 'var(--font-mono)' }}
@@ -264,21 +263,6 @@ export default function HomePage() {
           <p className="mt-4 text-sm text-red-400">✕ {pageState.message}</p>
         )}
 
-        {/* Example URLs */}
-        <p className="mt-5 text-xs text-[var(--muted)]">
-          Try:{' '}
-          {EXAMPLE_URLS.map((exUrl, i) => (
-            <span key={exUrl}>
-              <button
-                onClick={() => { setUrl(exUrl); handleAnalyze(exUrl, mode); }}
-                className="underline underline-offset-2 hover:text-[var(--text)] transition-colors"
-              >
-                {exUrl}
-              </button>
-              {i < EXAMPLE_URLS.length - 1 && <span className="mx-1.5 opacity-30">·</span>}
-            </span>
-          ))}
-        </p>
       </section>
 
       {/* ─── SCORE SPECTRUM ────────────────────────────────────────────── */}
