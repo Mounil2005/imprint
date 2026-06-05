@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  /* One accent — acid yellow. Used sparingly: one button, score highlights, selection. */
+  --accent: #e2ff55;
+  --accent-dim: rgba(226, 255, 85, 0.08);
+  --accent-fg: #1a1c00;
+
+  --bg: #09090b;
+  --surface: #0e0e11;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-mid: rgba(255, 255, 255, 0.12);
+  --text: #e5e0f5;
+  --muted: #635d7a;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Deliberately thin scrollbar — not decorative */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2e2a40; }
+
+/* Keyboard-only focus ring using accent */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Text selection uses accent */
+::selection {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+/* Section divider utility */
+.rule {
+  border-top: 1px solid var(--border);
+}
+
+/* Mono numbers — tighter than default */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
