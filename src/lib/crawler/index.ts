@@ -170,7 +170,6 @@ async function launchBrowser() {
       '--no-zygote',
       '--disable-extensions',
       '--disable-background-networking',
-      '--single-process',
     ],
   });
 }
