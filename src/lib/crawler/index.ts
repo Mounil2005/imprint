@@ -143,17 +143,35 @@ async function crawlPage(
   return { html, screenshot, crawlTime: Date.now() - t, httpStatus };
 }
 
+// ─── Browser launcher ────────────────────────────────────────────────────────
+// On Vercel, Playwright's bundled browser isn't available at runtime.
+// @sparticuz/chromium ships a serverless-compatible binary inside the package
+// itself, so it gets traced and deployed with the function.
+
+async function launchBrowser() {
+  if (process.env.VERCEL) {
+    const { default: chromium } = await import('@sparticuz/chromium');
+    const { chromium: pw } = await import('playwright-core');
+    return pw.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  }
+  const { chromium } = await import('playwright');
+  return chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  });
+}
+
 // ─── Public API: single page ──────────────────────────────────────────────────
 
 export async function crawlWebsite(url: string): Promise<CrawlResult> {
   const startTime = Date.now();
-  const { chromium } = await import('playwright');
   let browser;
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-    });
+    browser = await launchBrowser();
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -178,14 +196,10 @@ export async function crawlMultiplePages(
   maxPages = 5,
 ): Promise<MultiPageCrawlResult> {
   const startTime = Date.now();
-  const { chromium } = await import('playwright');
   let browser;
 
   try {
-    browser = await chromium.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-    });
+    browser = await launchBrowser();
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
