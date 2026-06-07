@@ -23,10 +23,34 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://imprint-production-a862.up.railway.app';
+
 export const metadata: Metadata = {
-  title: 'Imprint — AI Pattern Score',
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: 'Imprint — Is Your Site Vibe-Coded?',
+    template: '%s | Imprint',
+  },
   description:
-    'Detect AI-generated design and code patterns on any website or GitHub repository. Get a 0–100 score across 28 pattern detectors. No machine learning.',
+    'Analyze any website or GitHub repo for AI-generated design and code patterns. Get a 0–100 vibe-coded score across 28 detectors. No ML, instant results.',
+  keywords: ['vibe coded', 'AI design detector', 'website analyzer', 'AI patterns', 'shadcn detector', 'vibe coding score'],
+  authors: [{ name: 'Imprint' }],
+  openGraph: {
+    title: 'Imprint — Is Your Site Vibe-Coded?',
+    description: 'Analyze any website for AI-generated design and code patterns. Get a 0–100 score across 28 detectors.',
+    url: BASE_URL,
+    siteName: 'Imprint',
+    type: 'website',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Imprint — Vibe-Coded Score' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Imprint — Is Your Site Vibe-Coded?',
+    description: 'Analyze any website for AI-generated design and code patterns. Get a 0–100 score across 28 detectors.',
+    images: ['/og-image.png'],
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: BASE_URL },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -37,6 +61,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       style={{ fontFamily: 'var(--font-body), system-ui, sans-serif' }}
     >
       <body className="min-h-screen antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'Imprint',
+              url: BASE_URL,
+              description: 'Analyze any website or GitHub repo for AI-generated design and code patterns. Get a 0–100 vibe-coded score.',
+              applicationCategory: 'DeveloperApplication',
+              operatingSystem: 'Any',
+              offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+            }),
+          }}
+        />
         <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)/90] backdrop-blur-sm">
           <div className="max-w-5xl mx-auto px-5 sm:px-8 h-12 flex items-center">
             <Link
