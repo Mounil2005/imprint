@@ -81,9 +81,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<AnalysisError>({ error: `Invalid URL: ${rawUrl}`, code: 'INVALID_URL' }, { status: 400 });
   }
 
+  const TIMEOUT_MS = mode === 'multi' ? 90_000 : 40_000;
+  const timeoutSignal = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('Analysis timed out — the site took too long to respond')), TIMEOUT_MS),
+  );
+
   try {
     if (mode === 'multi') {
-      const multiResult = await crawlMultiplePages(normalizedUrl, 5);
+      const multiResult = await Promise.race([crawlMultiplePages(normalizedUrl, 5), timeoutSignal]);
 
       if (multiResult.pages.length === 0) {
         return NextResponse.json<AnalysisError>(
@@ -95,7 +100,7 @@ export async function POST(req: NextRequest) {
       const result = await analyzeMultiplePages(multiResult.pages, multiResult.totalCrawlTime);
       return NextResponse.json(result);
     } else {
-      const crawlResult = await crawlWebsite(normalizedUrl);
+      const crawlResult = await Promise.race([crawlWebsite(normalizedUrl), timeoutSignal]);
 
       // ── Classify the failure type ────────────────────────────────────────
       if (crawlResult.error && !crawlResult.html) {
