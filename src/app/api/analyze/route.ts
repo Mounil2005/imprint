@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<AnalysisError>({ error: `Invalid URL: ${rawUrl}`, code: 'INVALID_URL' }, { status: 400 });
   }
 
-  const TIMEOUT_MS = mode === 'multi' ? 90_000 : 40_000;
+  const TIMEOUT_MS = mode === 'multi' ? 110_000 : 60_000;
   const timeoutSignal = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error('Analysis timed out — the site took too long to respond')), TIMEOUT_MS),
   );

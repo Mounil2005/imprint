@@ -123,10 +123,10 @@ async function crawlPage(
 ): Promise<{ html: string; screenshot: string | null; crawlTime: number; httpStatus: number }> {
   const t = Date.now();
   // goto() returns the main-frame response — capture HTTP status from it
-  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 });
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
   const httpStatus = response?.status() ?? 200;
-  await page.waitForTimeout(1500);
-  try { await page.waitForLoadState('networkidle', { timeout: 6000 }); } catch { /* ok */ }
+  await page.waitForTimeout(800);
+  try { await page.waitForLoadState('networkidle', { timeout: 3000 }); } catch { /* ok */ }
 
   let screenshot: string | null = null;
   try {
