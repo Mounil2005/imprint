@@ -29,6 +29,7 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.11",
     "@tailwindcss/postcss": "^4",
     "@types/cheerio": "^0.22.35",
     "@types/node": "^20",

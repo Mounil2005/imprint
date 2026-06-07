@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  node_bundler = "nft"
+  included_files = ["node_modules/@sparticuz/chromium/**"]
+
+[functions."*"]
+  timeout = 26
