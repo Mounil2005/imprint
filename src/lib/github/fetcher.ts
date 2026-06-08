@@ -97,6 +97,7 @@ export async function fetchRepository(githubUrl: string): Promise<RepoFetchResul
   const headers: HeadersInit = {
     Accept: 'application/vnd.github.v3+json',
     'User-Agent': 'Imprint-CodeAnalyzer/1.0',
+    ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}),
   };
 
   // ── Step 1: repo metadata ───────────────────────────────────────────────────
