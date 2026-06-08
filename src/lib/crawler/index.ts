@@ -132,8 +132,8 @@ async function crawlPage(
   try {
     const buf = await page.screenshot({
       type: 'jpeg',
-      quality: 60,
-      clip: { x: 0, y: 0, width: 1280, height: 1800 },
+      quality: 50,
+      clip: { x: 0, y: 0, width: 800, height: 600 },
     });
     screenshot = `data:image/jpeg;base64,${buf.toString('base64')}`;
   } catch { /* continue without screenshot */ }
