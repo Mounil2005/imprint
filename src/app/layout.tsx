@@ -61,6 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${syne.variable} ${dmSans.variable} ${dmMono.variable}`}
       style={{ fontFamily: 'var(--font-body), system-ui, sans-serif' }}
     >
+      <head>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-LKN9DYE81T" />
+        <script dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-LKN9DYE81T');` }} />
+      </head>
       <body className="min-h-screen antialiased">
         <script
           type="application/ld+json"
