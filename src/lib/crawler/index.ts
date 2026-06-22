@@ -244,35 +244,28 @@ export async function crawlMultiplePages(
     const links = extractInternalLinks(homeResult.html, finalHomeUrl);
     const selectedLinks = links.slice(0, maxPages - 1);
 
-    // ── Step 3: crawl sub-pages 2 at a time ──────────────────────────────────
-    // Concurrency=2 halves wall-clock time vs sequential while keeping peak
-    // memory at ~350MB (browser + 2 tabs), safe under Render's 512MB limit.
-    // Sub-pages use fast options: no screenshot (detectors only need HTML),
-    // shorter settle/networkidle waits.
+    // ── Step 3: crawl sub-pages sequentially, images blocked ─────────────────
+    // Sequential = 1 tab open at a time → safe under Render's 512MB limit.
+    // Images are blocked per-page: they are the main load-time bottleneck and
+    // are not needed for HTML-based pattern detection.
     const SUB_PAGE_OPTS: CrawlPageOptions = {
-      takeScreenshot: true,   // keep for page-score thumbnails in the UI
+      takeScreenshot: true,
       settleMs: 300,
       networkIdleMs: 1000,
-      gotoTimeoutMs: 20000,
+      gotoTimeoutMs: 15000,
     };
-    const CONCURRENCY = 2;
     const otherResults: Array<{ url: string; pageType: string; html: string; screenshot: string | null; crawlTime: number; httpStatus: number }> = [];
-    for (let i = 0; i < selectedLinks.length; i += CONCURRENCY) {
-      const batch = selectedLinks.slice(i, i + CONCURRENCY);
-      const batchResults = await Promise.all(
-        batch.map(async (link) => {
-          const p = await ctx.newPage();
-          try {
-            const r = await crawlPage(p as never, link, SUB_PAGE_OPTS);
-            return { url: link, pageType: detectPageType(link), ...r };
-          } catch {
-            return { url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0, httpStatus: 0 };
-          } finally {
-            await p.close();
-          }
-        }),
-      );
-      otherResults.push(...batchResults);
+    for (const link of selectedLinks) {
+      const p = await ctx.newPage();
+      try {
+        await p.route('**/*.{png,jpg,jpeg,gif,webp,avif,svg,ico,bmp}', (r) => r.abort());
+        const r = await crawlPage(p as never, link, SUB_PAGE_OPTS);
+        otherResults.push({ url: link, pageType: detectPageType(link), ...r });
+      } catch {
+        otherResults.push({ url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0, httpStatus: 0 });
+      } finally {
+        await p.close();
+      }
     }
 
     const pages = [
