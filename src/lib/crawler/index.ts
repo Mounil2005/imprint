@@ -228,20 +228,20 @@ export async function crawlMultiplePages(
     const links = extractInternalLinks(homeResult.html, finalHomeUrl);
     const selectedLinks = links.slice(0, maxPages - 1);
 
-    // ── Step 3: crawl additional pages in parallel (each gets its own tab) ──
-    const otherResults = await Promise.all(
-      selectedLinks.map(async (link) => {
-        const p = await ctx.newPage();
-        try {
-          const r = await crawlPage(p as never, link);
-          return { url: link, pageType: detectPageType(link), ...r };
-        } catch {
-          return { url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0 };
-        } finally {
-          await p.close();
-        }
-      }),
-    );
+    // ── Step 3: crawl additional pages sequentially (one tab at a time) ──────
+    // Sequential rather than parallel to stay within Render's 512MB free tier.
+    const otherResults: Array<{ url: string; pageType: string; html: string; screenshot: string | null; crawlTime: number; httpStatus: number }> = [];
+    for (const link of selectedLinks) {
+      const p = await ctx.newPage();
+      try {
+        const r = await crawlPage(p as never, link);
+        otherResults.push({ url: link, pageType: detectPageType(link), ...r });
+      } catch {
+        otherResults.push({ url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0, httpStatus: 0 });
+      } finally {
+        await p.close();
+      }
+    }
 
     const pages = [
       { url: finalHomeUrl, pageType: 'home', ...homeResult },
