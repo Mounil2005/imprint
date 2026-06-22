@@ -117,26 +117,42 @@ export function extractInternalLinks(html: string, baseUrl: string): string[] {
 
 // ─── Single-page crawl (reused internally) ───────────────────────────────────
 
+interface CrawlPageOptions {
+  takeScreenshot?: boolean;
+  settleMs?: number;
+  networkIdleMs?: number;
+  gotoTimeoutMs?: number;
+}
+
 async function crawlPage(
   page: Awaited<ReturnType<Awaited<ReturnType<typeof import('playwright')['chromium']['launch']>>['newContext']>>['newPage'] extends (...a: never[]) => Promise<infer P> ? P : never,
   url: string,
+  options: CrawlPageOptions = {},
 ): Promise<{ html: string; screenshot: string | null; crawlTime: number; httpStatus: number }> {
+  const {
+    takeScreenshot = true,
+    settleMs = 800,
+    networkIdleMs = 3000,
+    gotoTimeoutMs = 30000,
+  } = options;
+
   const t = Date.now();
-  // goto() returns the main-frame response — capture HTTP status from it
-  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: gotoTimeoutMs });
   const httpStatus = response?.status() ?? 200;
-  await page.waitForTimeout(800);
-  try { await page.waitForLoadState('networkidle', { timeout: 3000 }); } catch { /* ok */ }
+  await page.waitForTimeout(settleMs);
+  try { await page.waitForLoadState('networkidle', { timeout: networkIdleMs }); } catch { /* ok */ }
 
   let screenshot: string | null = null;
-  try {
-    const buf = await page.screenshot({
-      type: 'jpeg',
-      quality: 50,
-      clip: { x: 0, y: 0, width: 800, height: 600 },
-    });
-    screenshot = `data:image/jpeg;base64,${buf.toString('base64')}`;
-  } catch { /* continue without screenshot */ }
+  if (takeScreenshot) {
+    try {
+      const buf = await page.screenshot({
+        type: 'jpeg',
+        quality: 50,
+        clip: { x: 0, y: 0, width: 800, height: 600 },
+      });
+      screenshot = `data:image/jpeg;base64,${buf.toString('base64')}`;
+    } catch { /* continue without screenshot */ }
+  }
 
   const html = await page.content();
   return { html, screenshot, crawlTime: Date.now() - t, httpStatus };
@@ -228,19 +244,35 @@ export async function crawlMultiplePages(
     const links = extractInternalLinks(homeResult.html, finalHomeUrl);
     const selectedLinks = links.slice(0, maxPages - 1);
 
-    // ── Step 3: crawl additional pages sequentially (one tab at a time) ──────
-    // Sequential rather than parallel to stay within Render's 512MB free tier.
+    // ── Step 3: crawl sub-pages 2 at a time ──────────────────────────────────
+    // Concurrency=2 halves wall-clock time vs sequential while keeping peak
+    // memory at ~350MB (browser + 2 tabs), safe under Render's 512MB limit.
+    // Sub-pages use fast options: no screenshot (detectors only need HTML),
+    // shorter settle/networkidle waits.
+    const SUB_PAGE_OPTS: CrawlPageOptions = {
+      takeScreenshot: true,   // keep for page-score thumbnails in the UI
+      settleMs: 300,
+      networkIdleMs: 1000,
+      gotoTimeoutMs: 20000,
+    };
+    const CONCURRENCY = 2;
     const otherResults: Array<{ url: string; pageType: string; html: string; screenshot: string | null; crawlTime: number; httpStatus: number }> = [];
-    for (const link of selectedLinks) {
-      const p = await ctx.newPage();
-      try {
-        const r = await crawlPage(p as never, link);
-        otherResults.push({ url: link, pageType: detectPageType(link), ...r });
-      } catch {
-        otherResults.push({ url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0, httpStatus: 0 });
-      } finally {
-        await p.close();
-      }
+    for (let i = 0; i < selectedLinks.length; i += CONCURRENCY) {
+      const batch = selectedLinks.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(
+        batch.map(async (link) => {
+          const p = await ctx.newPage();
+          try {
+            const r = await crawlPage(p as never, link, SUB_PAGE_OPTS);
+            return { url: link, pageType: detectPageType(link), ...r };
+          } catch {
+            return { url: link, pageType: detectPageType(link), html: '', screenshot: null, crawlTime: 0, httpStatus: 0 };
+          } finally {
+            await p.close();
+          }
+        }),
+      );
+      otherResults.push(...batchResults);
     }
 
     const pages = [
