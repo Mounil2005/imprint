@@ -23,7 +23,7 @@ const dmMono = DM_Mono({
   display: 'swap',
 });
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://imprint-production-a862.up.railway.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://imprint.codes';
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

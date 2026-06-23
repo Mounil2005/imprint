@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://imprint-production-a862.up.railway.app';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://imprint.codes';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

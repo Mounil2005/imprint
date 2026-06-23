@@ -44,15 +44,15 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-semibold text-base mb-2">Third-party services</h2>
           <p>
-            Imprint is hosted on Railway. Their infrastructure may collect standard network
+            Imprint is hosted on Render. Their infrastructure may collect standard network
             telemetry. See{' '}
             <a
-              href="https://railway.com/legal/privacy"
+              href="https://render.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:opacity-70 transition-opacity"
             >
-              Railway&apos;s Privacy Policy
+              Render&apos;s Privacy Policy
             </a>{' '}
             for details.
           </p>

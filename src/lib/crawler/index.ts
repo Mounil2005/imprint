@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { lookup } from 'dns/promises';
 
 export interface CrawlResult {
   html: string;
@@ -31,6 +32,24 @@ export function normalizeUrl(input: string): string {
     return new URL(url).href;
   } catch {
     throw new Error(`Invalid URL: ${input}`);
+  }
+}
+
+async function assertPublicUrl(url: string): Promise<void> {
+  const u = new URL(url);
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+    throw new Error('Only http and https URLs are allowed');
+  }
+  let address: string;
+  try {
+    const result = await lookup(u.hostname);
+    address = result.address;
+  } catch {
+    return; // DNS failure — crawler will surface the error naturally
+  }
+  const PRIVATE = /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.)/;
+  if (PRIVATE.test(address) || address === '::1') {
+    throw new Error('Requests to internal network addresses are not allowed');
   }
 }
 
@@ -174,7 +193,7 @@ async function launchBrowser() {
       headless: true,
     });
   }
-  // Railway / local: full container, browsers installed via playwright install
+  // Render / local: full container, browsers installed via playwright install
   const { chromium } = await import('playwright');
   return chromium.launch({
     headless: true,
@@ -196,6 +215,7 @@ export async function crawlWebsite(url: string): Promise<CrawlResult> {
   const startTime = Date.now();
   let browser;
   try {
+    await assertPublicUrl(url);
     browser = await launchBrowser();
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
@@ -224,6 +244,7 @@ export async function crawlMultiplePages(
   let browser;
 
   try {
+    await assertPublicUrl(rootUrl);
     browser = await launchBrowser();
     const ctx = await browser.newContext({
       viewport: { width: 1440, height: 900 },
